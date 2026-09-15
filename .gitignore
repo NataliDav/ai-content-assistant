@@ -1,0 +1,45 @@
+# API-ключи и секреты
+ключи.txt
+*.key
+.env
+.env.*
+
+# Логи
+server.log
+*.log
+
+# Сгенерированные данные
+*.csv
+
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.egg-info/
+dist/
+build/
+.venv/
+venv/
+env/
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Windows
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+# Linux
+*~
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Ollama (локальные модели)
+*.gguf

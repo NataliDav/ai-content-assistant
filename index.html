@@ -1,0 +1,924 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ИИ-ассистент для контента</title>
+<style>
+  :root {
+    --bg: #f4f6fa;
+    --card: #ffffff;
+    --accent: #4f46e5;
+    --accent-dark: #4338ca;
+    --border: #e2e8f0;
+    --text: #1e293b;
+    --muted: #64748b;
+    --user: #eef2ff;
+    --ai: #f8fafc;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: "Segoe UI", system-ui, -apple-system, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+  }
+  header {
+    background: linear-gradient(135deg, var(--accent), #7c3aed);
+    color: #fff;
+    padding: 24px 20px;
+    text-align: center;
+  }
+  header h1 { margin: 0 0 6px; font-size: 22px; }
+  header .sub { opacity: .9; font-size: 14px; }
+  .wrap {
+    max-width: 960px;
+    margin: 24px auto 60px;
+    padding: 0 16px;
+    display: grid;
+    gap: 20px;
+  }
+  .block {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 20px;
+    box-shadow: 0 1px 3px rgba(15, 23, 42, .06);
+  }
+  .block h2 {
+    margin: 0 0 14px;
+    font-size: 17px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .block h2 .num {
+    background: var(--accent);
+    color: #fff;
+    width: 24px; height: 24px;
+    border-radius: 50%;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 13px;
+    flex: none;
+  }
+  button {
+    border: none;
+    border-radius: 8px;
+    padding: 10px 16px;
+    font: inherit;
+    font-weight: 600;
+    cursor: pointer;
+  }
+  button:disabled { opacity: .5; cursor: default; }
+  .btn-accent { background: var(--accent); color: #fff; }
+  .btn-accent:hover:not(:disabled) { background: var(--accent-dark); }
+  .btn-outline {
+    background: #fff;
+    color: var(--accent);
+    border: 1px solid var(--accent);
+  }
+  .btn-outline:hover:not(:disabled) { background: var(--user); }
+  select, input[type="text"], input[type="password"], textarea {
+    width: 100%;
+    padding: 9px 12px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    font: inherit;
+    color: var(--text);
+    background: #fff;
+    resize: vertical;
+  }
+  select:focus, input:focus, textarea:focus {
+    outline: 2px solid var(--accent);
+    outline-offset: -1px;
+  }
+  #status { font-size: 13px; color: #c7d2fe; }
+  .hint { font-size: 12px; color: var(--muted); margin-top: 8px; }
+
+  .settings-bar { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; margin-bottom: 4px; }
+  .file-btn {
+    display: inline-block;
+    padding: 10px 16px;
+    border: 1px solid var(--accent);
+    border-radius: 8px;
+    color: var(--accent);
+    background: #fff;
+    font-weight: 600;
+    font-size: 14px;
+    cursor: pointer;
+  }
+  .file-btn:hover { background: var(--user); }
+
+  #settingsList { margin-top: 14px; display: grid; gap: 8px; }
+  .set-card {
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    background: #fff;
+    overflow: hidden;
+  }
+  .set-card.active { border-color: var(--accent); }
+  .set-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    padding: 12px 14px;
+    cursor: pointer;
+    user-select: none;
+  }
+  .set-head:hover { background: var(--user); }
+  .set-name { font-weight: 700; overflow: hidden; text-overflow: ellipsis; min-width: 0; }
+  .set-toggle { color: var(--muted); transition: transform .15s ease; font-size: 12px; }
+  .set-card.open .set-toggle { transform: rotate(90deg); }
+  .set-details {
+    display: none;
+    padding: 0 14px 14px;
+    border-top: 1px dashed var(--border);
+  }
+  .set-card.open .set-details { display: block; }
+  .set-row { font-size: 13px; margin: 8px 0 0; }
+  .set-row b { color: var(--muted); }
+  .set-ex {
+    white-space: pre-wrap;
+    max-height: 150px;
+    overflow-y: auto;
+    font-size: 12px;
+    color: var(--muted);
+    margin-top: 4px;
+    line-height: 1.5;
+  }
+  .apply-bar {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+    margin-top: 14px;
+  }
+
+  .model-grid {
+    margin-top: 20px;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
+  }
+  @media (max-width: 720px) { .model-grid { grid-template-columns: 1fr; } }
+  .model-box {
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    background: var(--bg);
+    overflow: hidden;
+  }
+  .model-box.active { border-color: var(--accent); }
+  .model-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    padding: 12px 14px;
+    cursor: pointer;
+    user-select: none;
+  }
+  .model-head:hover { background: var(--user); }
+  .model-title { font-weight: 700; font-size: 14px; }
+  .model-body { display: none; padding: 0 14px 14px; }
+  .model-box.open .model-body { display: block; }
+  .model-box.open .set-toggle { transform: rotate(90deg); }
+  .m-tab {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    margin: 12px 0 10px;
+  }
+  .m-tab input { width: auto; }
+  .panel { display: grid; gap: 10px; }
+  .model-label { font-size: 13px; color: var(--muted); font-weight: 600; display: grid; gap: 4px; }
+  .ext-actions { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+  .ext-actions .hint { margin: 0; }
+  #keyStatus.ok { color: #15803d; }
+  #keyStatus.err { color: #b91c1c; }
+
+  #chat {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    min-height: 160px;
+    max-height: 55vh;
+    overflow-y: auto;
+    padding: 4px 2px;
+    margin-bottom: 12px;
+  }
+  .msg {
+    max-width: 85%;
+    padding: 10px 14px;
+    border-radius: 12px;
+    line-height: 1.5;
+    white-space: pre-wrap;
+    word-wrap: break-word;
+    font-size: 14px;
+  }
+  .msg.user {
+    align-self: flex-end;
+    background: var(--user);
+    border: 1px solid #e0e7ff;
+  }
+  .msg.ai {
+    align-self: flex-start;
+    background: var(--ai);
+    border: 1px solid var(--border);
+  }
+  .msg .who {
+    display: block;
+    font-size: 11px;
+    color: var(--muted);
+    font-weight: 600;
+    margin-bottom: 4px;
+  }
+  .empty { color: var(--muted); font-size: 14px; text-align: center; padding: 30px 0; }
+  #saveInfo {
+    margin-top: 10px;
+    font-size: 13px;
+    color: var(--muted);
+  }
+  #saveInfo.ok { color: #15803d; }
+  #saveInfo.err { color: #b91c1c; }
+  .send-row { display: flex; gap: 10px; align-items: flex-end; }
+  .send-row textarea { flex: 1; }
+  .dl-row {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    flex-wrap: wrap;
+    margin-top: 12px;
+  }
+  .dl-row .hint { margin: 0; }
+  .spinner {
+    display: inline-block;
+    width: 14px; height: 14px;
+    border: 2px solid #c7d2fe;
+    border-top-color: var(--accent);
+    border-radius: 50%;
+    animation: spin .7s linear infinite;
+    vertical-align: middle;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>ИИ-ассистент для контента</h1>
+  <div class="sub" id="status">подключение…</div>
+</header>
+
+<div class="wrap">
+
+  <section class="block" id="settings">
+    <h2><span class="num">1</span> Настройки ассистента</h2>
+    <div class="settings-bar">
+      <label class="file-btn" title="Загрузить роль/инструкцию из PDF — полный текст станет системным промптом">
+        Загрузить роль (PDF)
+        <input type="file" id="pdfInput" accept=".pdf,application/pdf" hidden>
+      </label>
+      <span class="hint" style="margin:0;">в карточку попадёт абзац с описанием роли, а полный текст уйдёт в нейросеть как системный промпт</span>
+    </div>
+    <div id="settingsList"></div>
+    <div class="apply-bar">
+      <button class="btn-accent" id="btnApplyRole" disabled>Применить выбранную роль</button>
+    </div>
+
+    <div class="model-grid">
+      <div class="model-box open" id="ollamaCard">
+        <div class="model-head" id="ollamaHead">
+          <span class="model-title">Ollama — локально, бесплатно</span>
+          <span class="set-toggle">▸</span>
+        </div>
+        <div class="model-body">
+          <label class="m-tab"><input type="radio" name="provider" value="ollama" checked> Использовать Ollama</label>
+          <div class="panel">
+            <label class="model-label">Модель
+              <select id="modelSel"></select>
+            </label>
+            <div class="ext-actions">
+              <button class="btn-outline" id="btnStartOllama">Запустить Ollama / обновить модели</button>
+              <span class="hint" id="ollamaStatus"></span>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="model-box open" id="extCard">
+        <div class="model-head" id="extHead">
+          <span class="model-title">Внешний ИИ — по API-ключу</span>
+          <span class="set-toggle">▸</span>
+        </div>
+        <div class="model-body">
+          <label class="m-tab"><input type="radio" name="provider" value="external"> Использовать внешний ИИ</label>
+          <div class="panel">
+            <label class="model-label">Провайдер
+              <select id="extProvider">
+                <option value="proxyapi">ProxyAPI (все модели)</option>
+                <option value="openai">OpenAI</option>
+                <option value="anthropic">Anthropic Claude</option>
+                <option value="deepseek">DeepSeek</option>
+              </select>
+            </label>
+            <label class="model-label">API-ключ
+              <input type="password" id="extKey" placeholder="sk-...">
+            </label>
+            <label class="model-label">Модель
+              <select id="extModel">
+                <option value="">— подключат ключ, чтобы увидеть модели —</option>
+              </select>
+            </label>
+          <div class="ext-actions">
+            <button class="btn-outline" id="btnConnectKey">Подключить ключ</button>
+            <span class="hint" id="keyStatus"></span>
+          </div>
+          <div class="hint">Ключи выдаются на сайтах провайдеров: ProxyAPI — proxyapi.ru, OpenAI — platform.openai.com, DeepSeek — platform.deepseek.com, Anthropic — console.anthropic.com.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="hint">Внешний ИИ обрабатывается через локальный сервер (<b>python3 server.py</b>, http://127.0.0.1:8000). Ollama без сервера: <b>OLLAMA_ORIGINS=* ollama serve</b>.</div>
+  </section>
+
+  <section class="block" id="dialog">
+    <h2><span class="num">2</span> Диалог с нейросетью</h2>
+
+    <div id="chat">
+      <div class="empty">Выберите роль, модель и напишите запрос — ассистент напишет пост, покажет его здесь и добавит в список для скачивания.</div>
+    </div>
+
+    <div class="send-row">
+      <textarea id="inMsg" rows="3" placeholder="Напишите, какой пост нужен. Например: напиши пост о том, как ИИ экономит время учителя"></textarea>
+      <button class="btn-accent" id="btnSend">Отправить</button>
+    </div>
+    <div id="saveInfo"></div>
+    <div class="dl-row">
+      <button class="btn-outline" id="btnDownload">Скачать</button>
+      <button class="btn-outline" id="btnClear">Очистить</button>
+      <span class="hint" id="postCount"></span>
+    </div>
+  </section>
+
+</div>
+
+<script>
+  const OLLAMA_URL = "http://127.0.0.1:11434";
+  const API_BASE = location.protocol === "file:" ? "http://127.0.0.1:8000" : "";
+
+  const chat = document.getElementById("chat");
+  const inMsg = document.getElementById("inMsg");
+  const btnSend = document.getElementById("btnSend");
+  const pdfInput = document.getElementById("pdfInput");
+  const settingsList = document.getElementById("settingsList");
+  const btnApplyRole = document.getElementById("btnApplyRole");
+  const saveInfo = document.getElementById("saveInfo");
+  const statusEl = document.getElementById("status");
+  const btnDownload = document.getElementById("btnDownload");
+  const btnClear = document.getElementById("btnClear");
+
+  const modelSel = document.getElementById("modelSel");
+  const extProvider = document.getElementById("extProvider");
+  const extKey = document.getElementById("extKey");
+  const extModel = document.getElementById("extModel");
+  const btnConnectKey = document.getElementById("btnConnectKey");
+  const keyStatus = document.getElementById("keyStatus");
+  const btnStartOllama = document.getElementById("btnStartOllama");
+  const ollamaStatus = document.getElementById("ollamaStatus");
+  const ollamaCard = document.getElementById("ollamaCard");
+  const extCard = document.getElementById("extCard");
+
+  const history = [];
+  const current = { роль: "", ца: "", тон: "", примеры: "", промпт: "" };
+  let model = "";
+  let selectedIndex = -1;
+
+  const POSTS_KEY = "blog_posts";
+  const CFG_KEY = "blog_model_cfg";
+  let rows = [];
+  let posts = [];
+  try { posts = JSON.parse(localStorage.getItem(POSTS_KEY) || "[]"); } catch (e) {}
+
+  let provider = "ollama";
+  let ext = { provider: "proxyapi", key: "", model: "" };
+  try {
+    const cfg = JSON.parse(localStorage.getItem(CFG_KEY) || "null");
+    if (cfg) {
+      provider = cfg.provider || "ollama";
+      ext = Object.assign({ provider: "proxyapi", key: "", model: "" }, cfg.ext || {});
+    }
+  } catch (e) {}
+
+  function statusText(t) { statusEl.textContent = t; }
+  function saveMsg(text, cls) {
+    saveInfo.textContent = text;
+    saveInfo.className = cls || "";
+  }
+  function updatePostCount() {
+    const el = document.getElementById("postCount");
+    if (el) el.textContent = "Постов сохранено: " + posts.length;
+  }
+  function saveCfg() {
+    try { localStorage.setItem(CFG_KEY, JSON.stringify({ provider: provider, ext: ext })); } catch (e) {}
+  }
+
+  function esc(s) {
+    const d = document.createElement("div");
+    d.textContent = s;
+    return d.innerHTML;
+  }
+
+  function addMsg(role, content) {
+    const empty = chat.querySelector(".empty");
+    if (empty) empty.remove();
+    const div = document.createElement("div");
+    div.className = "msg " + (role === "user" ? "user" : "ai");
+    div.innerHTML = '<span class="who">' + (role === "user" ? "Вы" : "ИИ") +
+      "</span>" + esc(content);
+    chat.appendChild(div);
+    chat.scrollTop = chat.scrollHeight;
+  }
+
+  function loading() {
+    const empty = chat.querySelector(".empty");
+    if (empty) empty.remove();
+    const div = document.createElement("div");
+    div.className = "msg ai";
+    div.innerHTML = '<span class="who">ИИ</span><span class="spinner"></span> думает…';
+    chat.appendChild(div);
+    chat.scrollTop = chat.scrollHeight;
+    return div;
+  }
+
+  function resetChat() {
+    history.length = 0;
+    chat.innerHTML = "";
+  }
+
+  function applySettings(row) {
+    current.роль = row.роль || "";
+    current.ца = row.ца || "";
+    current.тон = row.тон || "";
+    current.примеры = row.примеры || "";
+    current.промпт = row.промпт || "";
+  }
+
+  function updateCardSelection() {
+    settingsList.querySelectorAll(".set-card").forEach((card, i) => {
+      card.classList.toggle("active", i === selectedIndex);
+    });
+    btnApplyRole.disabled = selectedIndex < 0;
+  }
+
+  function renderSettingsList() {
+    settingsList.innerHTML = "";
+    if (!rows.length) {
+      settingsList.innerHTML = '<div class="hint">Нажмите «Выбрать роль» и загрузите PDF-файл. В карточке будут название роли (из имени файла) и раздел [ROLE] документа. Полный текст уйдёт в нейросеть как системный промпт.</div>';
+      btnApplyRole.disabled = true;
+      return;
+    }
+    rows.forEach((r, i) => {
+      const div = document.createElement("div");
+      div.className = "set-card";
+      div.innerHTML =
+        '<div class="set-head">' +
+          '<span class="set-name">' + esc(r.роль || "(роль не указана)") + "</span>" +
+          '<span class="set-toggle">▸</span>' +
+        "</div>" +
+        '<div class="set-details">' +
+          (r.рольСекция ? '<div class="set-ex">' + esc(r.рольСекция) + "</div>" : "") +
+        "</div>";
+      div.addEventListener("click", () => {
+        selectedIndex = i;
+        updateCardSelection();
+        div.classList.toggle("open");
+      });
+      settingsList.appendChild(div);
+    });
+    if (selectedIndex < 0 || selectedIndex >= rows.length) selectedIndex = 0;
+    updateCardSelection();
+  }
+
+  btnApplyRole.addEventListener("click", () => {
+    if (selectedIndex >= 0 && rows[selectedIndex]) applyRole(rows[selectedIndex]);
+  });
+
+  function roleNameFromFile(name) {
+    const base = name.replace(/\.[^.]+$/, "").trim().replace(/[_-]+/g, " ");
+    return base || name;
+  }
+
+  function extractSection(text, name) {
+    const re = new RegExp("\\[\\s*" + name + "\\s*\\]", "i");
+    const start = text.search(re);
+    if (start < 0) return "";
+    const after = text.slice(start + (text.match(re)[0] || "").length);
+    const next = after.search(/\[[A-ZА-ЯЁa-zа-яё][^\]]*\s*\]/);
+    const section = next < 0 ? after : after.slice(0, next);
+    return section.trim();
+  }
+
+  function firstParagraph(text) {
+    const paras = text.split(/\n\s*\n/).map(p => p.trim()).filter(Boolean);
+    if (paras.length > 1) return paras[0];
+    return text.split(/\r?\n/).map(s => s.trim()).find(s => s) || "";
+  }
+
+  pdfInput.addEventListener("change", async () => {
+    const file = pdfInput.files[0];
+    if (!file) return;
+    saveMsg("Извлечение текста из PDF…");
+    try {
+      const res = await fetch(API_BASE + "/api/extract-pdf", {
+        method: "POST",
+        headers: { "Content-Type": "application/pdf" },
+        body: await file.arrayBuffer()
+      });
+      const data = await res.json();
+      if (!res.ok || data.ошибка) throw new Error(data.ошибка || ("HTTP " + res.status));
+      const text = (data.текст || "").trim();
+      if (!text) throw new Error("Текст из PDF не извлечён");
+      rows = [{
+        роль: roleNameFromFile(file.name),
+        рольСекция: extractSection(text, "ROLE") || firstParagraph(text),
+        ца: "", тон: "", примеры: "",
+        промпт: text
+      }];
+      selectedIndex = 0;
+      renderSettingsList();
+      saveMsg("Роль загружена: " + file.name + " · в нейросеть отправлен полный текст (" +
+        data.символов + " симв.)", "ok");
+    } catch (e) {
+      saveMsg("Ошибка загрузки PDF: " + e.message, "err");
+    }
+  });
+
+  function applyProviderUI() {
+    document.querySelectorAll('input[name="provider"]').forEach(r => {
+      r.checked = r.value === provider;
+    });
+    ollamaCard.classList.toggle("active", provider === "ollama");
+    extCard.classList.toggle("active", provider === "external");
+    if (provider === "external") {
+      extProvider.value = ext.provider;
+      extKey.value = ext.key;
+      extModel.value = ext.model;
+      updateKeyStatus();
+    }
+  }
+
+  function updateKeyStatus() {
+    keyStatus.className = "hint";
+    if (ext.key) {
+      keyStatus.textContent = "Подключён: " + ext.provider + (ext.model ? " · " + ext.model : "");
+    } else {
+      keyStatus.textContent = "ключ не подключён";
+    }
+  }
+
+  function filterChatModels(models) {
+    const skip = /(tts|transcrib|whisper|embed|sora|video|image|vision|dall|moderation|audio|speech|voice|search)/i;
+    return (models || []).filter(m => !skip.test(m));
+  }
+
+  function fillModelList(models) {
+    const chat = filterChatModels(models);
+    extModel.innerHTML = "";
+    if (!chat.length) {
+      const opt = document.createElement("option");
+      opt.value = "";
+      opt.textContent = "— нет текстовых моделей —";
+      extModel.appendChild(opt);
+      ext.model = "";
+      return;
+    }
+    chat.forEach(id => {
+      const opt = document.createElement("option");
+      opt.value = id;
+      opt.textContent = id;
+      extModel.appendChild(opt);
+    });
+    const def = chat.includes("gpt-4o-mini") ? "gpt-4o-mini" : chat[0];
+    extModel.value = def;
+    ext.model = def;
+  }
+  extProvider.addEventListener("change", () => {
+    if (extModel.value) ext.model = extModel.value;
+  });
+
+  document.querySelectorAll('input[name="provider"]').forEach(r => {
+    r.addEventListener("change", () => {
+      provider = r.value;
+      saveCfg();
+      applyProviderUI();
+      if (provider === "ollama") loadModels();
+    });
+  });
+
+  async function checkAndConnectKey() {
+    const key = extKey.value.trim();
+    if (!key) { saveMsg("Введите API-ключ", "err"); return; }
+    btnConnectKey.disabled = true;
+    btnConnectKey.textContent = "Проверка…";
+    keyStatus.className = "hint";
+    keyStatus.textContent = "проверка ключа…";
+    try {
+      const data = await callServer("/api/check-key", {
+        провайдер: extProvider.value, ключ: key, модель: extModel.value || ""
+      });
+      ext.provider = extProvider.value;
+      ext.key = key;
+      provider = "external";
+      fillModelList(data.модели);
+      saveCfg();
+      applyProviderUI();
+      keyStatus.className = "hint ok";
+      keyStatus.textContent = "✓ Подключён: " + data.провайдер +
+        (ext.model ? " · " + ext.model : "") + " (доступно моделей: " + data.моделей + ")";
+      saveMsg("Ключ проверен и подключён: " + data.провайдер, "ok");
+    } catch (e) {
+      keyStatus.className = "hint err";
+      keyStatus.textContent = "ошибка: " + e.message;
+      saveMsg("Не удалось подключить ключ: " + e.message, "err");
+    } finally {
+      btnConnectKey.disabled = false;
+      btnConnectKey.textContent = "Подключить ключ";
+    }
+  }
+  btnConnectKey.addEventListener("click", checkAndConnectKey);
+
+  document.getElementById("ollamaHead").addEventListener("click", () => {
+    ollamaCard.classList.toggle("open");
+  });
+  document.getElementById("extHead").addEventListener("click", () => {
+    extCard.classList.toggle("open");
+  });
+  btnStartOllama.addEventListener("click", () => {
+    ollamaStatus.textContent = "запуск…";
+    loadModels();
+  });
+
+  async function callServer(path, body) {
+    const res = await fetch(API_BASE + path, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body)
+    });
+    const data = await res.json();
+    if (!res.ok || data.ошибка) throw new Error(data.ошибка || ("HTTP " + res.status));
+    return data;
+  }
+
+  async function loadModels() {
+    statusText("Ollama: запуск…");
+    ollamaStatus.textContent = "запуск…";
+    try {
+      const res = await fetch(API_BASE + "/api/ollama/ensure", { method: "POST" });
+      const data = await res.json();
+      if (!res.ok || data.ошибка) throw new Error(data.ошибка || ("HTTP " + res.status));
+      ollamaStatus.textContent = data.started ? "Ollama запущена" : "Ollama подключена";
+      fillModels(data.models || []);
+    } catch (e) {
+      try {
+        const res = await fetch(OLLAMA_URL + "/api/tags");
+        const data = await res.json();
+        ollamaStatus.textContent = "Ollama подключена";
+        fillModels((data.models || []).map(m => m.name));
+      } catch (e2) {
+        ollamaStatus.textContent = "не запущена";
+        statusText("Ollama не запущена: " + e.message);
+      }
+    }
+  }
+
+  function fillModels(models) {
+    modelSel.innerHTML = '<option value="">— модель —</option>';
+    models.forEach(name => {
+      const opt = document.createElement("option");
+      opt.value = name;
+      opt.textContent = name;
+      modelSel.appendChild(opt);
+    });
+    if (models.includes("qwen2.5:3b")) modelSel.value = "qwen2.5:3b";
+    else if (models.length) modelSel.value = models[0];
+    model = modelSel.value;
+    statusText("ИИ: Ollama · " + (model || "модель не выбрана"));
+  }
+  modelSel.addEventListener("change", () => { model = modelSel.value; });
+  extModel.addEventListener("change", () => { ext.model = extModel.value; });
+
+  async function askOllama(messages) {
+    const res = await fetch(OLLAMA_URL + "/api/chat", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ model: model, messages: messages, stream: false })
+    });
+    if (!res.ok) {
+      let detail = "";
+      try { detail = (await res.text()).slice(0, 200); } catch (e) {}
+      throw new Error("Ollama: " + res.status + " " + detail);
+    }
+    const data = await res.json();
+    if (data.error) throw new Error(data.error);
+    return data.message.content;
+  }
+
+  function buildSystem() {
+    if (current.промпт) {
+      return current.промпт +
+        "\n\nОтвечай строго в формате:\nЗАГОЛОВОК: <заголовок поста>\nТЕКСТ ПОСТА:\n<текст поста>";
+    }
+    const parts = [];
+    if (current.роль) parts.push("Твоя роль: " + current.роль + ".");
+    parts.push("Ты — профессиональный контент-менеджер, пишешь посты для блога.");
+    if (current.ца) parts.push("Целевая аудитория: " + current.ца + ".");
+    if (current.тон) parts.push("Тон контента: " + current.тон + ".");
+    if (current.примеры) parts.push("Ориентируйся на стиль следующих примеров текстов:\n" + current.примеры);
+    parts.push("Отвечай строго в формате:\nЗАГОЛОВОК: <заголовок поста>\nТЕКСТ ПОСТА:\n<текст поста>");
+    return parts.join("\n");
+  }
+
+  async function applyRole(r) {
+    if (provider === "ollama" && !model) { saveMsg("Сначала выберите модель ИИ", "err"); return; }
+    if (provider === "external" && !ext.key) { saveMsg("Подключите API-ключ внешнего ИИ", "err"); return; }
+    applySettings(r);
+    selectedIndex = rows.indexOf(r);
+    updateCardSelection();
+
+    resetChat();
+    const spinner = loading();
+    btnApplyRole.disabled = true;
+    saveMsg("");
+    try {
+      let answer;
+      if (provider === "ollama") {
+        answer = await askOllama([
+          { role: "system", content: buildSystem() },
+          { role: "user", content: "Представься в своей роли и сообщи, что готов к работе. Ответь одним-двумя короткими предложениями. Без формата ЗАГОЛОВОК." }
+        ]);
+      } else {
+        const data = await callServer("/api/apply-role", {
+          роль: r.роль, ца: r.ца, тон: r.тон, примеры: r.примеры, промпт: r.промпт || "",
+          провайдер: ext.provider, ключ: ext.key, модель: ext.model
+        });
+        answer = data.ответ;
+      }
+      spinner.remove();
+      addMsg("ai", answer);
+      history.push({ role: "assistant", content: answer });
+      saveMsg("Роль применена: " + (r.роль || "(без роли)") + " — диалог начат", "ok");
+    } catch (e) {
+      spinner.remove();
+      addMsg("ai", "Ошибка при применении роли: " + e.message);
+      saveMsg("Не удалось применить роль: " + e.message, "err");
+    } finally {
+      btnApplyRole.disabled = false;
+      updateCardSelection();
+    }
+  }
+
+  function parsePost(text) {
+    text = text.trim();
+    if (text.indexOf("ТЕКСТ ПОСТА:") !== -1) {
+      const idx = text.indexOf("ТЕКСТ ПОСТА:");
+      const head = text.slice(0, idx);
+      const body = text.slice(idx + "ТЕКСТ ПОСТА:".length).trim();
+      let title = "";
+      head.split(/\r?\n/).forEach(line => {
+        const s = line.trim();
+        if (!title && s.toUpperCase().indexOf("ЗАГОЛОВОК:") === 0) {
+          title = s.slice("ЗАГОЛОВОК:".length).trim().replace(/^["'«»]+|["'«»]+$/g, "");
+        }
+      });
+      if (!title) {
+        head.split(/\r?\n/).forEach(line => {
+          const s = line.trim().replace(/^[*-№. ]+/, "");
+          if (!title && s) title = s;
+        });
+      }
+      return { title: title, body: body };
+    }
+    const lines = text.split(/\r?\n/);
+    for (let i = 0; i < lines.length; i++) {
+      const s = lines[i].trim();
+      if (s.toUpperCase().indexOf("ЗАГОЛОВОК:") === 0) {
+        return {
+          title: s.slice("ЗАГОЛОВОК:".length).trim().replace(/^["'«»]+|["'«»]+$/g, ""),
+          body: lines.slice(i + 1).join("\n").trim()
+        };
+      }
+    }
+    if (lines.length > 1 && lines[0].trim()) {
+      return { title: lines[0].trim().replace(/^[*-№. ]+/, ""), body: lines.slice(1).join("\n").trim() };
+    }
+    return { title: "", body: text };
+  }
+
+  async function send() {
+    const text = inMsg.value.trim();
+    if (!text) return;
+    if (provider === "ollama" && !model) { saveMsg("Сначала выберите модель ИИ", "err"); return; }
+    if (provider === "external" && !ext.key) { saveMsg("Подключите API-ключ внешнего ИИ", "err"); return; }
+    inMsg.value = "";
+    saveMsg("");
+
+    const messages = [
+      { role: "system", content: buildSystem() },
+      ...history.slice(-12),
+      { role: "user", content: text }
+    ];
+
+    addMsg("user", text);
+    const spinner = loading();
+    btnSend.disabled = true;
+
+    try {
+      let answer;
+      if (provider === "ollama") {
+        answer = await askOllama(messages);
+      } else {
+        const data = await callServer("/api/chat", {
+          роль: current.роль, ца: current.ца, тон: current.тон, примеры: current.примеры,
+          промпт: current.промпт,
+          история: history, сообщение: text,
+          провайдер: ext.provider, ключ: ext.key, модель: ext.model
+        });
+        answer = data.ответ;
+      }
+      spinner.remove();
+      addMsg("ai", answer);
+      history.push({ role: "user", content: text });
+      history.push({ role: "assistant", content: answer });
+
+      const parsed = parsePost(answer);
+      posts.push({ title: parsed.title, text: parsed.body });
+      try { localStorage.setItem(POSTS_KEY, JSON.stringify(posts)); } catch (e) {}
+      updatePostCount();
+      saveMsg("✓ Пост сохранён в списке. Нажмите «Скачать сгенерированные_посты.csv»", "ok");
+    } catch (e) {
+      spinner.remove();
+      addMsg("ai", "Ошибка: " + e.message);
+      saveMsg("Не удалось получить ответ: " + e.message, "err");
+    } finally {
+      btnSend.disabled = false;
+    }
+  }
+
+  function csvEscape(s, d) {
+    s = String(s == null ? "" : s);
+    return /[";\r\n]/.test(s) || s.indexOf(d) !== -1 ? '"' + s.replace(/"/g, '""') + '"' : s;
+  }
+
+  function downloadCSV() {
+    const lines = [["Заголовок", "Текст поста"].map(s => csvEscape(s, ";")).join(";")];
+    posts.forEach(p => lines.push([p.title, p.text].map(s => csvEscape(s, ";")).join(";")));
+    const blob = new Blob(["\uFEFF" + lines.join("\r\n")], { type: "text/csv;charset=utf-8" });
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = "сгенерированные_посты.csv";
+    a.click();
+    URL.revokeObjectURL(a.href);
+    saveMsg("Файл сгенерированные_посты.csv скачан", "ok");
+  }
+
+  function clearChat() {
+    if (!history.length && !chat.querySelector(".msg")) return;
+    if (confirm("Очистить диалог с нейросетью?")) {
+      resetChat();
+      chat.innerHTML = '<div class="empty">Диалог очищен. Выберите роль, модель и напишите запрос — ассистент напишет пост, покажет его здесь и добавит в список для скачивания.</div>';
+      saveMsg("Диалог с нейросетью очищен", "ok");
+    }
+  }
+
+  btnSend.addEventListener("click", send);
+  inMsg.addEventListener("keydown", e => {
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault();
+      send();
+    }
+  });
+  btnDownload.addEventListener("click", downloadCSV);
+  btnClear.addEventListener("click", clearChat);
+
+  async function refreshExtModels() {
+    try {
+      const data = await callServer("/api/check-key", {
+        провайдер: ext.provider, ключ: ext.key, модель: ""
+      });
+      fillModelList(data.модели);
+    } catch (e) {}
+  }
+
+  renderSettingsList();
+  applyProviderUI();
+  updatePostCount();
+  loadModels();
+  if (provider === "external" && ext.key) refreshExtModels();
+</script>
+</body>
+</html>
